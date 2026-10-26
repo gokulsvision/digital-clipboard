@@ -28,7 +28,12 @@ function clamp(v: number, lo: number, hi: number): number {
 
 export default function BoardView({ board, tool, theme, onToolChange, onChange, onPushHistory, onPopHistory }: Props) {
   const svgRef = useRef<SVGSVGElement | null>(null);
-  const dragRef = useRef<string | null>(null);
+  const dragRef = useRef<
+    | { type: 'marker'; id: string }
+    | { type: 'arrow-body'; id: string; startX: number; startY: number; orig: Arrow }
+    | { type: 'arrow-end'; id: string; end: 'start' | 'end' }
+    | null
+  >(null);
   const drawRef = useRef<{ kind: 'pass' | 'run'; x1: number; y1: number; flip: boolean; current: Arrow | null } | null>(null);
   // Last cursor position over the pitch, so hotkeys place at the mouse.
   const mousePosRef = useRef<{ x: number; y: number } | null>(null);
@@ -130,23 +135,32 @@ export default function BoardView({ board, tool, theme, onToolChange, onChange, 
       e.preventDefault();
       return;
     }
-    // Move tool: drag a marker, or select an arrow / clear the selection.
+    // Move tool: drag a marker, drag/reshape an arrow, or clear the selection.
     if (marker) {
       setSelectedId(marker.id);
-      if (
-        board.markers.some((m) => m.id === marker.id) &&
-        (marker.x !== e.clientX || true) // always record: a drag may follow
-      ) {
-        onPushHistory();
-      }
-      dragRef.current = marker.id;
+      onPushHistory(); // a drag may follow
+      dragRef.current = { type: 'marker', id: marker.id };
       capture(e);
       e.preventDefault();
       return;
     }
     const arrowEl = (e.target as Element).closest('[data-arrow-id]');
     if (arrowEl) {
-      setSelectedId(arrowEl.getAttribute('data-arrow-id'));
+      const id = arrowEl.getAttribute('data-arrow-id');
+      const arrow = board.arrows.find((a) => a.id === id);
+      if (arrow) {
+        setSelectedId(arrow.id);
+        onPushHistory();
+        const nearEnd = Math.hypot(at.x - arrow.x2, at.y - arrow.y2) < 2.8;
+        const nearStart = Math.hypot(at.x - arrow.x1, at.y - arrow.y1) < 2.8;
+        if (nearEnd) dragRef.current = { type: 'arrow-end', id: arrow.id, end: 'end' };
+        else if (nearStart) dragRef.current = { type: 'arrow-end', id: arrow.id, end: 'start' };
+        else dragRef.current = { type: 'arrow-body', id: arrow.id, startX: at.x, startY: at.y, orig: { ...arrow } };
+        capture(e);
+        e.preventDefault();
+        return;
+      }
+      setSelectedId(id);
       return;
     }
     setSelectedId(null);
@@ -183,10 +197,35 @@ export default function BoardView({ board, tool, theme, onToolChange, onChange, 
       setPreview(arrow);
       return;
     }
-    const id = dragRef.current;
-    if (!id) return;
-    const { x, y } = toNorm(e.clientX, e.clientY);
-    onChange((b) => ({ ...b, markers: b.markers.map((m) => (m.id === id ? { ...m, x, y } : m)) }));
+    const drag = dragRef.current;
+    if (!drag) return;
+    if (drag.type === 'marker') {
+      const { x, y } = toNorm(e.clientX, e.clientY);
+      onChange((b) => ({ ...b, markers: b.markers.map((m) => (m.id === drag.id ? { ...m, x, y } : m)) }));
+      return;
+    }
+    const at = toNorm(e.clientX, e.clientY);
+    if (drag.type === 'arrow-body') {
+      // Translate the whole arrow: shifts it and re-angles it on the pitch.
+      const dx = at.x - drag.startX;
+      const dy = at.y - drag.startY;
+      onChange((b) => ({
+        ...b,
+        arrows: b.arrows.map((a) =>
+          a.id === drag.id
+            ? { ...a, x1: drag.orig.x1 + dx, y1: drag.orig.y1 + dy, x2: drag.orig.x2 + dx, y2: drag.orig.y2 + dy }
+            : a,
+        ),
+      }));
+      return;
+    }
+    // arrow-end: move just one end to reshape / extend the arrow.
+    onChange((b) => ({
+      ...b,
+      arrows: b.arrows.map((a) =>
+        a.id === drag.id ? (drag.end === 'end' ? { ...a, x2: at.x, y2: at.y } : { ...a, x1: at.x, y1: at.y }) : a,
+      ),
+    }));
   }
 
   function onPitchUp() {
@@ -274,6 +313,7 @@ export default function BoardView({ board, tool, theme, onToolChange, onChange, 
   function renderArrow(a: Arrow, isPreview: boolean) {
     const isSel = !isPreview && a.id === selectedId;
     const d = arrowPath(a);
+    const handleColor = a.kind === 'pass' ? colors.pass : colors.run;
     return (
       <g key={a.id} data-arrow-id={isPreview ? undefined : a.id} style={{ cursor: 'pointer' }}>
         <path
@@ -287,6 +327,14 @@ export default function BoardView({ board, tool, theme, onToolChange, onChange, 
           opacity={isPreview ? 0.7 : 1}
         />
         {!isPreview && <path d={d} fill="none" stroke="transparent" strokeWidth={2.6} strokeLinecap="round" />}
+        {isSel && (
+          <g style={{ pointerEvents: 'none' }}>
+            <circle cx={a.x1} cy={a.y1} r={1.5} fill="#fff" stroke={handleColor} strokeWidth={0.5} />
+            {/* the head handle is where you grab to extend or re-angle */}
+            <circle cx={a.x2} cy={a.y2} r={1.8} fill="#fff" stroke={handleColor} strokeWidth={0.6} />
+            <circle cx={a.x2} cy={a.y2} r={0.6} fill={handleColor} />
+          </g>
+        )}
       </g>
     );
   }
