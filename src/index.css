@@ -1,0 +1,331 @@
+:root {
+  --bg: #0d0d0f;
+  --card: #1c1c1e;
+  --panel: #232326;
+  --ink: #f5f5f7;
+  --muted: #98989e;
+  --edge: rgba(255, 255, 255, 0.12);
+  --blue: #0a84ff;
+  --red: #ff453a;
+  --amber: #ff9f0a;
+  --topbar: rgba(20, 20, 22, 0.78);
+  --frost: rgba(40, 40, 44, 0.72);
+  --hover: rgba(255, 255, 255, 0.08);
+  --focus-bg: rgba(255, 255, 255, 0.06);
+  --row-edge: rgba(255, 255, 255, 0.07);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.45);
+  --radius: 18px;
+}
+html.light {
+  --bg: #f5f5f7;
+  --card: #ffffff;
+  --panel: #f2f2f4;
+  --ink: #1d1d1f;
+  --muted: #6e6e73;
+  --edge: rgba(0, 0, 0, 0.1);
+  --blue: #0071e3;
+  --red: #e02d3c;
+  --amber: #ff9f0a;
+  --topbar: rgba(255, 255, 255, 0.78);
+  --frost: rgba(255, 255, 255, 0.72);
+  --hover: rgba(0, 0, 0, 0.05);
+  --focus-bg: #fff;
+  --row-edge: #f0f0f2;
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', Inter, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+button,
+input {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 22px;
+  background: var(--topbar);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--edge);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.board-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 6px 10px;
+  min-width: 0;
+  flex: 1 1 180px;
+  max-width: 380px;
+  background: transparent;
+}
+.board-name:hover {
+  border-color: var(--edge);
+}
+.board-name:focus {
+  outline: none;
+  border-color: var(--blue);
+  background: var(--focus-bg);
+}
+.top-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  border: 1px solid var(--edge);
+  border-radius: 980px;
+  background: var(--panel);
+  color: var(--ink);
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn:hover:not(:disabled) {
+  background: #2f2f33;
+}
+.btn.primary {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+.btn.primary:hover:not(:disabled) {
+  background: #2492ff;
+}
+.btn.danger {
+  color: var(--red);
+}
+.btn.small {
+  padding: 5px 12px;
+  font-size: 12px;
+}
+
+.board-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 26px 20px 40px;
+  gap: 18px;
+}
+
+.board-card {
+  width: 100%;
+  max-width: 860px;
+  background: var(--card);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: var(--shadow-card);
+}
+.pitch-svg {
+  display: block;
+  width: 100%;
+  border-radius: 12px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.pitch-svg.drawing {
+  cursor: crosshair;
+}
+.pitch-svg .marker {
+  cursor: grab;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px;
+  background: var(--frost);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+.tool-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  border: none;
+  background: transparent;
+  border-radius: 14px;
+  padding: 7px 13px;
+  min-width: 62px;
+  color: var(--ink);
+  transition: background 0.15s;
+}
+.tool-btn:hover {
+  background: var(--hover);
+}
+.tool-btn.active {
+  background: var(--blue);
+  color: #fff;
+}
+.tool-btn.active .tool-key {
+  color: rgba(255, 255, 255, 0.7);
+}
+.tool-btn.clear {
+  color: var(--red);
+}
+.tool-symbol {
+  font-size: 17px;
+  line-height: 1.2;
+}
+.tool-label {
+  font-size: 11px;
+  font-weight: 600;
+}
+.tool-key {
+  font-size: 9px;
+  color: #7c7c82;
+  font-weight: 700;
+}
+.toolbar-sep {
+  width: 1px;
+  height: 34px;
+  background: var(--edge);
+  margin: 0 6px;
+}
+
+.us-them {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+}
+.legend-x {
+  color: #58cafa;
+  font-weight: 800;
+}
+.legend-o {
+  color: #fb8794;
+  font-weight: 800;
+  margin-left: 10px;
+}
+.legend-ball {
+  margin-left: 10px;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: 40;
+}
+.saved-panel {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(440px, calc(100vw - 32px));
+  z-index: 41;
+  background: var(--card);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+.saved-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.saved-head h2 {
+  margin: 0;
+  font-size: 18px;
+}
+.saved-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--row-edge);
+}
+.saved-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.saved-meta span {
+  font-size: 11px;
+  color: var(--muted);
+}
+.saved-actions {
+  display: flex;
+  gap: 6px;
+  flex: none;
+}
+.hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 4px 0;
+}
+
+@media (max-width: 640px) {
+  .board-area {
+    padding: 14px 10px 28px;
+  }
+  .board-card {
+    padding: 8px;
+    border-radius: 14px;
+  }
+  .tool-btn {
+    min-width: 50px;
+    padding: 6px 9px;
+  }
+  .toolbar {
+    gap: 2px;
+  }
+}
