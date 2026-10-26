@@ -1,13 +1,13 @@
 import type { Tool } from './Board';
 
 const TOOLS: Array<{ id: Tool; label: string; key: string; symbol: string; hint?: string }> = [
-  { id: 'move', label: 'Move', key: 'V', symbol: '✥' },
-  { id: 'x', label: 'Us', key: 'X', symbol: '✕' },
-  { id: 'o', label: 'Them', key: 'O', symbol: '○' },
-  { id: 'ball', label: 'Ball', key: 'B', symbol: '⚽' },
-  { id: 'pass', label: 'Pass', key: 'P', symbol: '⇢', hint: '⇧ drag flips the curve' },
+  { id: 'move', label: 'Move', key: 'A', symbol: '✥' },
+  { id: 'x', label: 'Us', key: 'Q', symbol: '✕' },
+  { id: 'o', label: 'Them', key: 'W', symbol: '○' },
+  { id: 'ball', label: 'Ball', key: 'E', symbol: '⚽' },
+  { id: 'pass', label: 'Pass', key: 'D', symbol: '⇢', hint: '⇧ drag flips the curve' },
   { id: 'run', label: 'Run', key: 'R', symbol: '⟶' },
-  { id: 'erase', label: 'Erase', key: 'E', symbol: '⌫', hint: 'hover to erase' },
+  { id: 'erase', label: 'Erase', key: 'F', symbol: '⌫', hint: 'hover to erase' },
 ];
 
 interface Props {

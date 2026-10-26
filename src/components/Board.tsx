@@ -296,27 +296,28 @@ export default function BoardView({ board, tool, theme, onToolChange, onChange, 
     onChange((b) => ({ ...b, ballHolderId: b.ballHolderId === target ? null : target }));
   }
 
-  // Keyboard shortcuts. X/O place at the cursor right away and stay active
-  // so several markers can be placed in a row.
+  // Gamer hotkeys (LoL muscle memory): A = move, QWER = abilities,
+  // D/F = summoners, B = recall. Q/W place at the cursor right away and the
+  // tool stays active so several markers can be placed in a row.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const tag = (e.target as HTMLElement | null)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       const k = e.key.toLowerCase();
-      if (k === 'x') {
+      if (k === 'q') {
         onToolChange('x');
         if (mousePosRef.current) placeMarker('us');
-      } else if (k === 'o') {
+      } else if (k === 'w') {
         onToolChange('o');
         if (mousePosRef.current) placeMarker('them');
-      } else if (k === 'b') {
+      } else if (k === 'e') {
         onToolChange('ball');
         giveBallToHovered();
-      } else if (k === 'v') onToolChange('move');
-      else if (k === 'p') onToolChange('pass');
+      } else if (k === 'a') onToolChange('move');
       else if (k === 'r') onToolChange('run');
-      else if (k === 'e') onToolChange('erase');
+      else if (k === 'd') onToolChange('pass');
+      else if (k === 'f') onToolChange('erase');
       else if (k === 'backspace' || k === 'delete') deleteSelected();
       else if (k === 'escape') setSelectedId(null);
       else return;
@@ -425,20 +426,20 @@ export default function BoardView({ board, tool, theme, onToolChange, onChange, 
               onPointerLeave={() => setHoveredId((h) => (h === m.id ? null : h))}
               style={{ cursor: tool === 'move' ? 'grab' : 'pointer', touchAction: 'none' }}
             >
-              {isSel && <circle cx={m.x} cy={m.y} r={5.4} fill="none" stroke="#ff9f0a" strokeWidth={0.7} />}
-              <circle cx={m.x} cy={m.y} r={4.4} fill="transparent" />
+              {isSel && <circle cx={m.x} cy={m.y} r={4.2} fill="none" stroke="#ff9f0a" strokeWidth={0.6} />}
+              <circle cx={m.x} cy={m.y} r={3.3} fill="transparent" />
               {m.team === 'us' ? (
-                <g stroke={color} strokeWidth={1.25} strokeLinecap="round">
-                  <line x1={m.x - 2.3} y1={m.y - 2.3} x2={m.x + 2.3} y2={m.y + 2.3} />
-                  <line x1={m.x - 2.3} y1={m.y + 2.3} x2={m.x + 2.3} y2={m.y - 2.3} />
+                <g stroke={color} strokeWidth={1} strokeLinecap="round">
+                  <line x1={m.x - 1.7} y1={m.y - 1.7} x2={m.x + 1.7} y2={m.y + 1.7} />
+                  <line x1={m.x - 1.7} y1={m.y + 1.7} x2={m.x + 1.7} y2={m.y - 1.7} />
                 </g>
               ) : (
-                <circle cx={m.x} cy={m.y} r={2.5} fill="none" stroke={color} strokeWidth={1.25} />
+                <circle cx={m.x} cy={m.y} r={1.9} fill="none" stroke={color} strokeWidth={1} />
               )}
               {hasBall && (
                 <g>
-                  <circle cx={m.x + 3.8} cy={m.y - 3.8} r={1.9} fill="#f8fff8" stroke="#22312c" strokeWidth={0.35} />
-                  <circle cx={m.x + 3.8} cy={m.y - 3.8} r={0.7} fill="#22312c" />
+                  <circle cx={m.x + 3.2} cy={m.y - 3.2} r={1.7} fill="#f8fff8" stroke="#22312c" strokeWidth={0.35} />
+                  <circle cx={m.x + 3.2} cy={m.y - 3.2} r={0.65} fill="#22312c" />
                 </g>
               )}
             </g>

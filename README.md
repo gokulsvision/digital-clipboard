@@ -18,20 +18,24 @@ URL Vite prints (e.g. `http://192.168.x.x:5173`).
 
 ## Tools
 
-| Tool | Does | Key |
-|---|---|---|
-| Move | drag any X, O, or arrow | `V` |
-| Us | click to place an X at the cursor | `X` |
-| Them | click to place an O at the cursor | `O` |
-| Ball | click a player to give them the ball | `B` |
-| Pass | drag to draw a dashed, curved pass arrow — hold `Shift` to flip which way it bows | `P` |
-| Run | drag to draw a solid run arrow | `R` |
-| Erase | hover over anything to wipe it (tap on touch) | `E` |
+Gamer layout, LoL muscle memory: **A** to move, **QWER** for the core actions,
+**D/F** summoners, **B** to recall (save).
 
-Extras: `⌘Z`/`Ctrl+Z` undo, `Delete` removes the selected item, `Esc` clears
-the selection. The board autosaves to this browser; use **Save** to keep named
-copies you can reopen from **Saved boards**. There is a dark/light theme
-toggle in the top bar.
+| Key | Tool | Does |
+|---|---|---|
+| `A` | Move | drag any X, O, or arrow |
+| `Q` | Us | place an X at the cursor (stays active for more) |
+| `W` | Them | place an O at the cursor |
+| `E` | Ball | give the ball to the player under the cursor |
+| `D` | Pass | drag to draw a dashed, curved pass — hold `Shift` to flip the bow |
+| `R` | Run | drag to draw a solid run arrow |
+| `F` | Erase | hover over anything to wipe it (tap on touch) |
+
+Arrows are editable: drag the body to move them, grab an end handle to extend
+or re-angle, grab the middle handle to bend them into sharp cuts. Extras:
+`⌘Z`/`Ctrl+Z` undo, `Delete` removes the selection, `Esc` clears it, `B` saves
+the board. The board autosaves to this browser; named copies reopen from
+**Saved boards**. Dark/light toggle in the top bar.
 
 ## Stack
 

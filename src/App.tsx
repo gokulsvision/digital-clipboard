@@ -57,12 +57,21 @@ export default function App() {
     if (prev) setStorage((s) => ({ ...s, current: prev }));
   }
 
-  // Undo shortcut (Cmd/Ctrl+Z).
+  // Gamer shortcuts: B = save (recall), Cmd/Ctrl+Z = undo.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+      if (e.metaKey || e.ctrlKey || e.altKey) {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+          e.preventDefault();
+          undo();
+        }
+        return;
+      }
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (e.key.toLowerCase() === 'b') {
         e.preventDefault();
-        undo();
+        handleSave();
       }
     };
     window.addEventListener('keydown', onKey);
@@ -122,7 +131,13 @@ export default function App() {
           >
             {theme === 'dark' ? '☀︎ Light' : '☾ Dark'}
           </button>
-          <button className="btn" onClick={handleSave}>Save</button>
+          <button
+            className="btn"
+            onClick={handleSave}
+            title="Save board (B)"
+          >
+            Save
+          </button>
           <button className="btn" onClick={() => setPanelOpen(true)}>Saved boards</button>
         </div>
       </header>
@@ -139,12 +154,10 @@ export default function App() {
         />
         <Toolbar tool={tool} onToolChange={setTool} onClear={clearBoard} />
         <p className="us-them">
-          <span className="legend-x">✕</span> us
-          <span className="legend-o">○</span> them
-          <span className="legend-ball">⚽</span> ball holder
-          <span className="legend-undo">⌘Z</span> undo
-          <span className="legend-undo">⇧</span> flips pass curve
-          <span className="legend-undo">◍</span> drag arrow body to move · ends to reshape · middle to bend
+          <span className="legend-x">✕</span> us (Q)
+          <span className="legend-o">○</span> them (W)
+          <span className="legend-ball">⚽</span> ball (E)
+          <span className="legend-undo">B</span> save · <span className="legend-undo">⌘Z</span> undo
         </p>
       </main>
 
