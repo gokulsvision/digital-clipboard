@@ -32,6 +32,7 @@ export default function BoardView({ board, tool, theme, onToolChange, onChange, 
     | { type: 'marker'; id: string }
     | { type: 'arrow-body'; id: string; startX: number; startY: number; orig: Arrow }
     | { type: 'arrow-end'; id: string; end: 'start' | 'end' }
+    | { type: 'arrow-mid'; id: string }
     | null
   >(null);
   const drawRef = useRef<{ kind: 'pass' | 'run'; x1: number; y1: number; flip: boolean; current: Arrow | null } | null>(null);
@@ -153,7 +154,19 @@ export default function BoardView({ board, tool, theme, onToolChange, onChange, 
         onPushHistory();
         const nearEnd = Math.hypot(at.x - arrow.x2, at.y - arrow.y2) < 2.8;
         const nearStart = Math.hypot(at.x - arrow.x1, at.y - arrow.y1) < 2.8;
-        if (nearEnd) dragRef.current = { type: 'arrow-end', id: arrow.id, end: 'end' };
+        const mid = curveMid(arrow);
+        const nearMid = !nearEnd && !nearStart && Math.hypot(at.x - mid.x, at.y - mid.y) < 2.8;
+        if (nearMid) {
+          // Bend the arrow through this point. Anchoring at the current curve
+          // midpoint means the shape does not jump when grabbed.
+          if (arrow.mx == null || arrow.my == null) {
+            onChange((b) => ({
+              ...b,
+              arrows: b.arrows.map((a2) => (a2.id === arrow.id ? { ...a2, mx: mid.x, my: mid.y } : a2)),
+            }));
+          }
+          dragRef.current = { type: 'arrow-mid', id: arrow.id };
+        } else if (nearEnd) dragRef.current = { type: 'arrow-end', id: arrow.id, end: 'end' };
         else if (nearStart) dragRef.current = { type: 'arrow-end', id: arrow.id, end: 'start' };
         else dragRef.current = { type: 'arrow-body', id: arrow.id, startX: at.x, startY: at.y, orig: { ...arrow } };
         capture(e);
@@ -213,9 +226,25 @@ export default function BoardView({ board, tool, theme, onToolChange, onChange, 
         ...b,
         arrows: b.arrows.map((a) =>
           a.id === drag.id
-            ? { ...a, x1: drag.orig.x1 + dx, y1: drag.orig.y1 + dy, x2: drag.orig.x2 + dx, y2: drag.orig.y2 + dy }
+            ? {
+                ...a,
+                x1: drag.orig.x1 + dx,
+                y1: drag.orig.y1 + dy,
+                x2: drag.orig.x2 + dx,
+                y2: drag.orig.y2 + dy,
+                mx: drag.orig.mx != null ? drag.orig.mx + dx : undefined,
+                my: drag.orig.my != null ? drag.orig.my + dy : undefined,
+              }
             : a,
         ),
+      }));
+      return;
+    }
+    if (drag.type === 'arrow-mid') {
+      // Bend the arrow through the dragged anchor point.
+      onChange((b) => ({
+        ...b,
+        arrows: b.arrows.map((a) => (a.id === drag.id ? { ...a, mx: at.x, my: at.y } : a)),
       }));
       return;
     }
@@ -297,17 +326,35 @@ export default function BoardView({ board, tool, theme, onToolChange, onChange, 
     return () => window.removeEventListener('keydown', onKey);
   });
 
-  // Passes are drawn as a gentle arc; runs stay straight. Shift flips the bow.
+  // Control point of the quadratic path: explicit bend anchor if set, else
+  // the auto-bow for passes, else straight (runs).
+  function ctrlPoint(a: Arrow): { x: number; y: number } | null {
+    const mx = (a.x1 + a.x2) / 2;
+    const my = (a.y1 + a.y2) / 2;
+    if (a.mx != null && a.my != null) return { x: 2 * a.mx - mx, y: 2 * a.my - my };
+    if (a.kind === 'pass') {
+      const dx = a.x2 - a.x1;
+      const dy = a.y2 - a.y1;
+      const len = Math.hypot(dx, dy);
+      if (len < 0.01) return null;
+      const bow = len * 0.18 * (a.flip ? -1 : 1);
+      return { x: mx - (dy / len) * bow, y: my + (dx / len) * bow };
+    }
+    return null;
+  }
+
+  // Point on the curve at t = 0.5 — where the middle handle sits.
+  function curveMid(a: Arrow): { x: number; y: number } {
+    const c = ctrlPoint(a);
+    if (!c) return { x: (a.x1 + a.x2) / 2, y: (a.y1 + a.y2) / 2 };
+    return { x: 0.25 * a.x1 + 0.5 * c.x + 0.25 * a.x2, y: 0.25 * a.y1 + 0.5 * c.y + 0.25 * a.y2 };
+  }
+
+  // Passes are drawn as a gentle arc; runs stay straight until bent.
   function arrowPath(a: Arrow): string {
-    if (a.kind === 'run') return `M ${a.x1} ${a.y1} L ${a.x2} ${a.y2}`;
-    const dx = a.x2 - a.x1;
-    const dy = a.y2 - a.y1;
-    const len = Math.hypot(dx, dy);
-    if (len < 0.01) return `M ${a.x1} ${a.y1} L ${a.x2} ${a.y2}`;
-    const bow = len * 0.18 * (a.flip ? -1 : 1);
-    const cx = (a.x1 + a.x2) / 2 - (dy / len) * bow;
-    const cy = (a.y1 + a.y2) / 2 + (dx / len) * bow;
-    return `M ${a.x1} ${a.y1} Q ${cx} ${cy} ${a.x2} ${a.y2}`;
+    const c = ctrlPoint(a);
+    if (!c) return `M ${a.x1} ${a.y1} L ${a.x2} ${a.y2}`;
+    return `M ${a.x1} ${a.y1} Q ${c.x} ${c.y} ${a.x2} ${a.y2}`;
   }
 
   function renderArrow(a: Arrow, isPreview: boolean) {
@@ -330,6 +377,8 @@ export default function BoardView({ board, tool, theme, onToolChange, onChange, 
         {isSel && (
           <g style={{ pointerEvents: 'none' }}>
             <circle cx={a.x1} cy={a.y1} r={1.5} fill="#fff" stroke={handleColor} strokeWidth={0.5} />
+            {/* middle handle: grab to bend the arrow through this point */}
+            <circle cx={curveMid(a).x} cy={curveMid(a).y} r={1.6} fill={handleColor} stroke="#fff" strokeWidth={0.4} opacity={a.mx != null ? 1 : 0.7} />
             {/* the head handle is where you grab to extend or re-angle */}
             <circle cx={a.x2} cy={a.y2} r={1.8} fill="#fff" stroke={handleColor} strokeWidth={0.6} />
             <circle cx={a.x2} cy={a.y2} r={0.6} fill={handleColor} />

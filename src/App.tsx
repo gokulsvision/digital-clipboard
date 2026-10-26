@@ -144,7 +144,7 @@ export default function App() {
           <span className="legend-ball">⚽</span> ball holder
           <span className="legend-undo">⌘Z</span> undo
           <span className="legend-undo">⇧</span> flips pass curve
-          <span className="legend-undo">◍</span> drag arrow body to move · drag its ends to reshape
+          <span className="legend-undo">◍</span> drag arrow body to move · ends to reshape · middle to bend
         </p>
       </main>
 
